@@ -26,7 +26,14 @@ function Node()
 	this.type = "Air";
 }
 
-
+function Floor()
+{
+	this.x = 0;
+	this.y = 0;
+	this.w = 1;
+	this.h = 1;
+	this.type = "Floor";
+}
 
 function nodeConnection()
 {
@@ -116,19 +123,7 @@ function testCollision(a, b)
 		
 	return true;
 }
-function Floor()
-{
-	this.x = 0;
-	this.y = 0;
-	this.w = 1;
-	this.h = 1;
-	this.type = "Floor";
-	
-	this.draw = function()
-	{
-		drawRect(this.x,this.y,this.w,this.h,"#000000");
-	}
-}
+
 function Agent()
 {
 	this.x = 0;
@@ -143,7 +138,6 @@ function Agent()
 	
 	this.draw = function()
 	{
-		
 		drawRect(this.x, this.y, this.h, this.w, "#FF0000");
 	}
 	
@@ -162,13 +156,7 @@ function Agent()
 	
 	this.collided = function(other)
 	{
-		if(other.type == "Floor"){
-			if(this.velocity.y > 0)
-				{
-					this.velocity.y = 0;
-					this.y = (other.y - this.h) - 0.1;
-				}
-		}
+		if(other.type == "Floor");
 	}
 }
 function clearCanvas()
@@ -181,19 +169,6 @@ agent.h = (canvasH-1) / mapH;
 agent.x = 2;
 agent.y = 2;
 
-var floor = new Floor();
-floor.x = 0;
-floor.y = mapH-1 * (canvasH-1) / mapH;
-floor.w = 4 * (canvasW-1) / mapW;
-floor.h = 1 * (canvasH-1) / mapH;
-
-function collision()
-{
-	if(testCollision(agent,floor))
-	{
-		agent.collided(floor);
-	}
-}
 
 function update(deltaTime)
 {
@@ -204,18 +179,14 @@ function draw()
 {
 	clearCanvas();
 	drawMap();
-	floor.draw();
 	agent.draw();
-	
 }
 function mainLoop()
 {
 	initMap();
-	
 	var FPS = 30;
 	setInterval(function() {
 	  update(1000/FPS);
-	  collision();
 	  draw();
 	}, 1000/FPS);
 	
