@@ -8,6 +8,8 @@ var mapH = 10;
 var canvasW = 300;
 var canvasH = 300;
 
+var unitW = canvasW/mapW;
+var unitH = canvasH/mapH;
 var map = [[],[]];
 
 function click(e)
@@ -54,17 +56,15 @@ function drawConnections()
 }
 function drawMap()
 {
-	var nodeW = (canvasW-1) / mapW;
-	var nodeH = (canvasH-1) / mapH;
 	
 	for(var y=0; y< mapH; y++)
 	{
 		for(var x=0; x< mapW; x++)
 		{
 			var node = map[x,y];
-			var x_pos = x*nodeW;
-			var y_pos = y*nodeH;
-			drawRect(x_pos+1, y_pos+1, (nodeW-1), (nodeH-1), node.color); 
+			var x_pos = x;
+			var y_pos = y;
+			drawRect(x_pos+0.01, y_pos+0.01, 1-0.01, 1-0.01, node.color); 
 		}
 	}
 }
@@ -74,7 +74,7 @@ function drawMap()
 function drawRect(x,y,w,h, color)
 {
   context.fillStyle = color;
-  context.fillRect(x, y, w, h);
+  context.fillRect(x*unitW, y*unitH, w*unitW, h*unitH);
 }
 
 function drawHexagon(x,y,radius, color)
@@ -99,7 +99,7 @@ function drawHexagon(x,y,radius, color)
 var gravityAcceleration = new function()
 {
 	this.x = 0;
-	this.y = 0.001;
+	this.y = 10;
 }
 
 function testCollision(a, b)
@@ -129,6 +129,27 @@ function Floor()
 		drawRect(this.x,this.y,this.w,this.h,"#000000");
 	}
 }
+
+function newFloor(x,y,w,h)
+{
+	var floor = new Floor();
+	floor.x = x;
+	floor.y = y;
+	floor.w = w;
+	floor.h = h;
+	return floor;
+}
+
+function newFloorInGrid(x,y,w,h)
+{
+	xx = x*(canvasW/mapW);
+	yy = y*(canvasH/mapH);
+	ww = w*(canvasW/mapW);
+	hh = h*(canvasH/mapH);
+	var floor = newFloor(xx,yy,ww,hh);
+	return floor;
+}
+
 function Agent()
 {
 	this.x = 0;
@@ -137,7 +158,7 @@ function Agent()
 	this.h = 0;
 	this.velocity = new function()
 	{
-		this.x = 0.01;
+		this.x = .1;
 		this.y = 0;
 	}
 	
@@ -149,9 +170,9 @@ function Agent()
 	
 	this.update = function(deltaTime)
 	{
-		this.velocity.y += gravityAcceleration.y * deltaTime;
-		this.x+=this.velocity.x * deltaTime;
-		this.y+=this.velocity.y * deltaTime;
+		this.velocity.y += gravityAcceleration.y * deltaTime ;
+		this.x+=this.velocity.x * deltaTime ;
+		this.y+=this.velocity.y * deltaTime ;
 	}
 	
 	this.testCollision = function(collider)
@@ -166,7 +187,7 @@ function Agent()
 			if(this.velocity.y > 0)
 				{
 					this.velocity.y = 0;
-					this.y = (other.y - this.h) - 0.1;
+					this.y = (other.y - this.h) ;
 				}
 		}
 	}
@@ -175,49 +196,77 @@ function clearCanvas()
 {
 	context.clearRect ( 0 , 0 , myCanvas.width, myCanvas.height );
 }
+/*
 var agent = new Agent();
-agent.w = (canvasW-1) / mapW;
-agent.h = (canvasH-1) / mapH;
+agent.w = 1;
+agent.h = 1;
 agent.x = 2;
-agent.y = 2;
+agent.y = 2;*/
 
 var floor = new Floor();
 floor.x = 0;
-floor.y = mapH-1 * (canvasH-1) / mapH;
-floor.w = 4 * (canvasW-1) / mapW;
-floor.h = 1 * (canvasH-1) / mapH;
+floor.y = (mapH -1);
+floor.w = 4;
+floor.h = 1;
+
+var agents = new Array();
+
+var floors = new Array();
+
+function initFloors()
+{
+	floors.push(newFloorInGrid(0,3,2,1));
+	floors.push(floor);
+	var agent = new Agent();
+	agent.w = 1;
+	agent.h = 1;
+	agent.x = 2;
+	agent.y = 2;
+	agents.push(agent);
+}
 
 function collision()
 {
-	if(testCollision(agent,floor))
+	for(var a=0; a<agents.length; a++)
 	{
-		agent.collided(floor);
+		var agent = agents[a];
+		for(var i=0 ; i<floors.length; i++)
+		{
+			var floor = floors[i];
+			if(testCollision(agent,floor))
+			{
+				agent.collided(floor);
+			}
+		}
 	}
 }
 
 function update(deltaTime)
 {
-	agent.update(deltaTime);
+	for(var i=0; i<agents.length; i++)
+		agents[i].update();
 }
 
 function draw()
 {
 	clearCanvas();
 	drawMap();
-	floor.draw();
-	agent.draw();
+	for(var i=0; i<floors.length; i++)
+		floors[i].draw();
+	for(var i=0; i<agents.length; i++)
+		agents[i].draw();
 	
 }
 function mainLoop()
 {
 	initMap();
-	
+	initFloors();
 	var FPS = 30;
 	setInterval(function() {
-	  update(1000/FPS);
+	  update(FPS/1000);
 	  collision();
 	  draw();
-	}, 1000/FPS);
+	}, FPS/1000);
 	
 }
 
